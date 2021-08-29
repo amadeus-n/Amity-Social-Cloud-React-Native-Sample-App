@@ -1,10 +1,11 @@
-import { ActivityIndicator, Surface } from 'react-native-paper';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { getCommunity, createQuery, runQuery } from '@amityco/ts-sdk';
+import { ActivityIndicator, Surface, Appbar } from 'react-native-paper';
 import React, { VFC, useState, useLayoutEffect, useEffect, useCallback } from 'react';
 
 import { Header, CommunityItem, AddPost, FAB, Feed } from 'components';
 
+import { t } from 'i18n';
 import { alertError } from 'utils/alerts';
 
 import { DrawerStackHeaderProps } from 'types';
@@ -25,12 +26,24 @@ const Community: VFC = () => {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTitle: displayName || 'Commuity',
+      headerTitle: displayName || t('route.community'),
       header: ({ scene, previous, navigation: nav }: DrawerStackHeaderProps) => (
-        <Header scene={scene} navigation={nav} previous={previous} />
+        <Header
+          scene={scene}
+          navigation={nav}
+          previous={previous}
+          right={
+            <Appbar.Action
+              icon="account-group"
+              onPress={() => {
+                navigation.navigate('CommunityMembers', community);
+              }}
+            />
+          }
+        />
       ),
     });
-  }, [displayName, navigation]);
+  }, [community, displayName, navigation]);
 
   const getCurrentCommunity = useCallback(async () => {
     setLoading(true);
