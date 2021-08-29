@@ -11,14 +11,19 @@ import HeaderMenu from '../HeaderMenu';
 import styles from './styles';
 
 export type UserItemProps = {
+  canDelete?: boolean;
   onPress?: () => void;
+  type: 'users' | 'community';
   onEditUser?: (userId: string) => void;
+  onDeleteUser?: (userId: string) => void;
 };
 
 const UserItem: VFC<{ user: Amity.User | Amity.Membership<'community'> } & UserItemProps> = ({
   user: userProp,
   onPress,
   onEditUser,
+  onDeleteUser,
+  canDelete,
 }) => {
   const [user, setUser] = useState<Amity.User>();
   const [file, setFile] = useState<Amity.File>();
@@ -61,6 +66,8 @@ const UserItem: VFC<{ user: Amity.User | Amity.Membership<'community'> } & UserI
 
   const isUser = client.userId === userId;
   const canEdit = isUser && onEditUser ? onEdit : undefined;
+  const canDeleteUser =
+    !isUser && canDelete && onDeleteUser ? () => onDeleteUser(userId) : undefined;
 
   return (
     <Card onPress={onPress}>
@@ -70,6 +77,7 @@ const UserItem: VFC<{ user: Amity.User | Amity.Membership<'community'> } & UserI
             size={size}
             onEdit={canEdit}
             visible={openMenu}
+            onDelete={canDeleteUser}
             onToggleMenu={() => setOpenMenu(prev => !prev)}
           />
         )}
