@@ -11,7 +11,7 @@ import UserScreen from 'screens/User';
 import UsersScreen from 'screens/Users';
 import CommunityScreen from 'screens/Community';
 import CommunitiesScreen from 'screens/Communities';
-import CommunityMembersScreen from 'screens/Community/CommunityMembers';
+import CommunityMembersScreen from 'screens/CommunityMembers';
 
 import { t } from 'i18n';
 import overlay from 'utils/overlay';
