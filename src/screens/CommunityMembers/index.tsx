@@ -2,11 +2,19 @@ import { FlatList } from 'react-native';
 import { Surface } from 'react-native-paper';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import React, { VFC, useState, useLayoutEffect, useEffect, useRef, useCallback } from 'react';
-import { runQuery, createQuery, sortByLastCreated, queryCommunityMembers } from '@amityco/ts-sdk';
+import {
+  runQuery,
+  createQuery,
+  sortByLastCreated,
+  queryCommunityMembers,
+  removeCommunityUser,
+} from '@amityco/ts-sdk';
 
-import { Header, EmptyComponent, UserItem, Loading } from 'components';
+import { Header, EmptyComponent, UserItem, Loading, FAB, AddCommunityMember } from 'components';
 
+import useAuth from 'hooks/useAuth';
 import getErrorMessage from 'utils/getErrorMessage';
+import { alertConfirmation, alertError } from 'utils/alerts';
 
 import { LoadingState, DrawerStackHeaderProps } from 'types';
 
@@ -19,6 +27,7 @@ const CommunityMembersScreen: VFC = () => {
   const [isDeleted] = React.useState<Amity.Community['isDeleted']>(false);
   const [sortBy] = React.useState<'firstCreated' | 'lastCreated'>('lastCreated');
   const [loading, setLoading] = useState<LoadingState>(LoadingState.NOT_LOADING);
+  const [visibleAddCommunityMember, setVisibleAddCommunityMember] = useState(false);
 
   const [members, setMembers] = useState<Record<string, Amity.Membership<'community'>>>({});
 
@@ -27,10 +36,11 @@ const CommunityMembersScreen: VFC = () => {
   >({ nextPage: null, prevPage: null });
 
   const route = useRoute();
+  const { client } = useAuth();
   const navigation = useNavigation();
   const flatListRef = useRef<FlatList<Amity.Membership<'community'>>>(null);
 
-  const { communityId, displayName } = route.params as Amity.Community;
+  const { communityId, displayName, userId } = route.params as Amity.Community;
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -95,6 +105,25 @@ const CommunityMembersScreen: VFC = () => {
     [navigation],
   );
 
+  const onDeleteUser = useCallback(
+    userId_ => {
+      alertConfirmation(() => {
+        runQuery(
+          createQuery(removeCommunityUser, communityId, [userId_]),
+          ({ data, error: error_ }) => {
+            if (data) {
+              onRefresh();
+            } else if (error_) {
+              alertError(error_);
+            }
+          },
+        );
+      });
+    },
+    [communityId, onRefresh],
+  );
+
+  const isOwner = client.userId === userId;
   const errorText = getErrorMessage(error);
   const data = Object.values(members).sort(sortByLastCreated);
 
@@ -117,10 +146,33 @@ const CommunityMembersScreen: VFC = () => {
         }
         renderItem={({ item }) => (
           <Surface style={styles.userItem}>
-            <UserItem user={item} onPress={() => onPressUserItem(item)} />
+            <UserItem
+              user={item}
+              type="community"
+              canDelete={isOwner}
+              onDeleteUser={onDeleteUser}
+              onPress={() => onPressUserItem(item)}
+            />
           </Surface>
         )}
       />
+
+      {visibleAddCommunityMember && (
+        <AddCommunityMember
+          onAddMember={onRefresh}
+          communityId={communityId}
+          onClose={() => setVisibleAddCommunityMember(false)}
+        />
+      )}
+
+      {isOwner && (
+        <FAB
+          icon="plus"
+          onPress={() => {
+            setVisibleAddCommunityMember(true);
+          }}
+        />
+      )}
     </Surface>
   );
 };
