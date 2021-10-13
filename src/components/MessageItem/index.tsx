@@ -105,13 +105,7 @@ const MessageItem: VFC<{
         </Header>
         <View style={messageStyles.bubbleContainer}>
           <Bubble currentUser={currentUserId === userId} guestUser={currentUserId !== userId}>
-            {type === 'text' && messageData && (
-              <MessageText
-                message={messageData}
-                textStyle={{ color: colors.text, fontFamily: regularFont }}
-              />
-            )}
-
+            {type === 'text' && messageData && <MessageText message={messageData} />}
             {type === 'image' && messageData && <MessageImage message={messageData} />}
 
             <LeftArrow
