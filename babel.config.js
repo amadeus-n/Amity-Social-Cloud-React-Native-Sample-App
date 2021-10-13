@@ -27,6 +27,13 @@ module.exports = function (api) {
         },
       ],
       'react-native-reanimated/plugin',
+      [
+        '@nozbe/zacs/babel',
+        {
+          platform: 'native', // "web" or "native"
+          production: true, // pass `false` to enable debug attributes
+        },
+      ],
     ],
   };
 };

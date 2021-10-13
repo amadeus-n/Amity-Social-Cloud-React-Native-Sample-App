@@ -16,7 +16,7 @@ import { t } from 'i18n';
 import useAuth from 'hooks/useAuth';
 import getErrorMessage from 'utils/getErrorMessage';
 
-import { DrawerStackHeaderProps, LoadingState } from 'types';
+import { DrawerStackHeaderProps } from 'types';
 
 import styles from './styles';
 
@@ -24,8 +24,8 @@ const QUERY_LIMIT = 10;
 
 const ChatScreen: VFC = () => {
   const flatList = useRef(null);
+  const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<Record<string, Amity.Message>>({});
-  const [loading, setLoading] = useState<LoadingState>(LoadingState.NOT_LOADING);
 
   const [{ error, prevPage }, setMetadata] = useState<Amity.QueryMetadata & Amity.Pages>({
     nextPage: null,
@@ -51,16 +51,10 @@ const ChatScreen: VFC = () => {
     });
   }, [channelId, displayName, navigation]);
 
-  useEffect(
-    () =>
-      observeMessages(channelId, {
-        onEvent: (action, message) => {
-          setMessages(prevState => {
-            return { ...prevState, [message.localId]: message };
-          });
-        },
-      }),
-    [channelId],
+  useEffect(() =>
+    observeMessages(channelId, message => {
+      setMessages(prevState => ({ ...prevState, [message.localId]: message }));
+    }),
   );
 
   const onQueryMessages = useCallback(
@@ -82,7 +76,7 @@ const ChatScreen: VFC = () => {
           }
 
           if (!loading_) {
-            setLoading(LoadingState.NOT_LOADING);
+            setLoading(false);
           }
         },
       );
@@ -96,7 +90,7 @@ const ChatScreen: VFC = () => {
 
   const handleLoadMore = () => {
     if (prevPage) {
-      setLoading(LoadingState.IS_LOADING_MORE);
+      setLoading(true);
       onQueryMessages({ page: prevPage });
     }
   };
@@ -113,7 +107,7 @@ const ChatScreen: VFC = () => {
   );
 
   const renderFooter = () => {
-    if (loading === LoadingState.NOT_LOADING || !prevPage) {
+    if (!loading) {
       return null;
     }
 
@@ -151,9 +145,7 @@ const ChatScreen: VFC = () => {
             ListFooterComponent={renderFooter}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
-              loading === LoadingState.NOT_LOADING ? (
-                <Text style={styles.emptyMessage}>{t('chat.emptyMessage')}</Text>
-              ) : null
+              !loading ? <Text style={styles.emptyMessage}>{t('chat.emptyMessage')}</Text> : null
             }
           />
         )}
